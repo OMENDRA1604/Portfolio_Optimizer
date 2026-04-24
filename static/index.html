@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portfolio Optimizer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #c8f04e;
+    --accent2: #4ec8f0;
+    --accent3: #f04ec8;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --gold: #f0c84e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,240,78,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,240,78,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,240,78,0.06) 0%, transparent 70%);
+    top: -200px;
+    right: -200px;
+    pointer-events: none;
+    animation: pulse 8s ease-in-out infinite;
+  }
+
+  .glow-orb2 {
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(78,200,240,0.05) 0%, transparent 70%);
+    bottom: -100px;
+    left: -100px;
+    pointer-events: none;
+    animation: pulse 10s ease-in-out infinite reverse;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(200,240,78,0.1);
+    border: 1px solid rgba(200,240,78,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 6vw, 72px);
+    line-height: 1.05;
+    letter-spacing: -2px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  /* Input Panel */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 36px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,240,78,0.08);
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle.on { background: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+  }
+
+  .toggle.on::after { left: 21px; }
+
+  .toggle-label { font-size: 12px; color: var(--muted); }
+
+  .run-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 16px;
+    cursor: pointer;
+    margin-top: 28px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .run-btn:hover { background: #d4f55a; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .run-btn .spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error */
+  .error-box {
+    background: rgba(240,78,200,0.1);
+    border: 1px solid rgba(240,78,200,0.3);
+    color: var(--accent3);
+    padding: 16px 20px;
+    border-radius: 2px;
+    font-size: 13px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  /* Results */
+  #results { display: none; animation: fadeUp 0.6s ease both; }
+
+  /* Reasoning box */
+  .reasoning-box {
+    background: rgba(200,240,78,0.05);
+    border: 1px solid rgba(200,240,78,0.2);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    border-radius: 2px;
+    margin-bottom: 32px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .reasoning-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Strategy cards */
+  .strategies-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 800px) {
+    .strategies-grid { grid-template-columns: 1fr; }
+  }
+
+  .strategy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .strategy-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-color, var(--accent));
+  }
+
+  .strategy-card:hover {
+    border-color: var(--card-color, var(--accent));
+    transform: translateY(-2px);
+  }
+
+  .strategy-card.best {
+    border-color: var(--accent);
+    background: rgba(200,240,78,0.04);
+  }
+
+  .card-tag {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--card-color, var(--accent));
+    margin-bottom: 8px;
+  }
+
+  .card-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .metric-row:last-child { border-bottom: none; }
+
+  .metric-label { color: var(--muted); }
+  .metric-value { color: var(--text); font-weight: 500; }
+  .metric-value.positive { color: var(--accent); }
+  .metric-value.negative { color: var(--accent3); }
+
+  /* Allocation bars */
+  .allocation-section { margin-top: 20px; }
+  .alloc-item { margin-bottom: 12px; }
+
+  .alloc-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .alloc-ticker { color: var(--text); font-weight: 500; }
+  .alloc-pct { color: var(--muted); }
+
+  .alloc-bar-bg {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .alloc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--card-color, var(--accent));
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Chart panel */
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .chart-wrap { position: relative; height: 380px; }
+
+  /* Best pick banner */
+  .best-banner {
+    position: absolute;
+    top: -1px;
+    right: 24px;
+    background: var(--accent);
+    color: #0a0a0f;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="glow-orb"></div>
+<div class="glow-orb2"></div>
+
+<div class="container">
+  <header>
+    <div class="badge">Modern Portfolio Theory</div>
+    <h1>Portfolio<br/><em>Optimizer</em></h1>
+    <p class="subtitle">Risk-adjusted allocation · Efficient Frontier · Sharpe Maximization</p>
+  </header>
+
+  <!-- Input Panel -->
+  <div class="input-panel">
+    <div class="panel-title">Configure Portfolio</div>
+
+    <div style="margin-bottom:20px">
+      <label>Asset Tickers (comma-separated)</label>
+      <input type="text" id="tickers" value="VGT,VDC,VIS,VAW,VFH,VDE,VHT" placeholder="e.g. AAPL, MSFT, GOOGL, AMZN" />
+      <div class="hint">Enter 2–10 stock/ETF tickers. Example: SPY,QQQ,GLD,TLT</div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:20px">
+      <div>
+        <label>Start Date</label>
+        <input type="date" id="start_date" value="2018-01-01" />
+      </div>
+      <div>
+        <label>End Date</label>
+        <input type="date" id="end_date" value="2023-12-31" />
+      </div>
+      <div>
+        <label>Initial Capital ($)</label>
+        <input type="number" id="balance" value="10000" min="100" />
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle" id="shortToggle" onclick="this.classList.toggle('on')"></div>
+      <span class="toggle-label">Allow Short Selling (bounds: -1 to 1)</span>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runOptimize()">
+      <span id="btnText">Run Optimization</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Reasoning -->
+    <div class="reasoning-box">
+      <div class="reasoning-label">AI Reasoning</div>
+      <div id="reasoningText"></div>
+    </div>
+
+    <!-- Strategy Cards -->
+    <div class="panel-title" style="margin-bottom:20px">Optimized Allocations</div>
+    <div class="strategies-grid" id="strategyCards"></div>
+
+    <!-- Efficient Frontier Chart -->
+    <div class="chart-panel">
+      <div class="panel-title">Efficient Frontier</div>
+      <div class="chart-wrap">
+        <canvas id="frontierChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let frontierChart = null;
+
+const CARD_COLORS = ['#c8f04e', '#4ec8f0', '#f0c84e'];
+
+async function runOptimize() {
+  const btn = document.getElementById('runBtn');
+  const btnText = document.getElementById('btnText');
+  const spinner = document.getElementById('spinner');
+  const errorBox = document.getElementById('errorBox');
+  const results = document.getElementById('results');
+
+  const tickers = document.getElementById('tickers').value.split(',').map(t => t.trim()).filter(Boolean);
+  const start_date = document.getElementById('start_date').value;
+  const end_date = document.getElementById('end_date').value;
+  const total_balance = parseFloat(document.getElementById('balance').value);
+  const allow_shorting = document.getElementById('shortToggle').classList.contains('on');
+
+  // Show loading
+  btn.disabled = true;
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+  errorBox.style.display = 'none';
+  results.style.display = 'none';
+
+  try {
+    const res = await fetch('/optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tickers, start_date, end_date, total_balance, allow_shorting })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      errorBox.textContent = '⚠ ' + data.error;
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    renderResults(data);
+
+  } catch (e) {
+    errorBox.textContent = '⚠ Network error: ' + e.message;
+    errorBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btnText.style.display = 'block';
+    spinner.style.display = 'none';
+  }
+}
+
+function renderResults(data) {
+  // Reasoning
+  document.getElementById('reasoningText').textContent = data.reasoning;
+
+  // Find best strategy
+  const best = data.strategies.reduce((a, b) => a.sharpe_ratio > b.sharpe_ratio ? a : b);
+
+  // Strategy cards
+  const container = document.getElementById('strategyCards');
+  container.innerHTML = '';
+
+  data.strategies.forEach((s, i) => {
+    const isBest = s.name === best.name;
+    const color = CARD_COLORS[i];
+    const card = document.createElement('div');
+    card.className = 'strategy-card' + (isBest ? ' best' : '');
+    card.style.setProperty('--card-color', color);
+
+    const allocHTML = Object.entries(s.weights)
+      .sort((a, b) => b[1] - a[1])
+      .map(([ticker, pct]) => `
+        <div class="alloc-item">
+          <div class="alloc-header">
+            <span class="alloc-ticker">${ticker}</span>
+            <span class="alloc-pct">${pct.toFixed(1)}% · $${s.dollars[ticker].toFixed(0)}</span>
+          </div>
+          <div class="alloc-bar-bg">
+            <div class="alloc-bar-fill" style="width:0%" data-target="${pct}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+    card.innerHTML = `
+      ${isBest ? '<div class="best-banner">Best Risk-Adjusted</div>' : ''}
+      <div class="card-tag">Strategy ${i + 1}</div>
+      <div class="card-name">${s.name}</div>
+      <div class="metric-row">
+        <span class="metric-label">Annual Return</span>
+        <span class="metric-value positive">+${s.annual_return}%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Volatility</span>
+        <span class="metric-value">${s.annual_volatility}%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Sharpe Ratio</span>
+        <span class="metric-value ${s.sharpe_ratio > 1 ? 'positive' : ''}">${s.sharpe_ratio}</span>
+      </div>
+      <div class="allocation-section">${allocHTML}</div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.alloc-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target;
+    });
+  }, 100);
+
+  // Efficient Frontier Chart
+  renderChart(data);
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderChart(data) {
+  if (frontierChart) frontierChart.destroy();
+
+  const ctx = document.getElementById('frontierChart').getContext('2d');
+
+  const best = data.strategies.reduce((a, b) => a.sharpe_ratio > b.sharpe_ratio ? a : b);
+
+  frontierChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Monte Carlo Portfolios',
+          data: data.monte_carlo,
+          backgroundColor: 'rgba(107,107,138,0.25)',
+          pointRadius: 2,
+          pointHoverRadius: 4,
+        },
+        {
+          label: 'Efficient Frontier',
+          data: data.frontier,
+          backgroundColor: '#c8f04e',
+          pointRadius: 3,
+          showLine: true,
+          borderColor: '#c8f04e',
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+        },
+        ...data.strategies.map((s, i) => ({
+          label: s.name,
+          data: [{ x: s.annual_volatility, y: s.annual_return }],
+          backgroundColor: CARD_COLORS[i],
+          pointRadius: 10,
+          pointHoverRadius: 14,
+          pointStyle: 'rectRot',
+        }))
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#6b6b8a',
+            font: { family: 'DM Mono', size: 11 },
+            boxWidth: 10,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#12121a',
+          borderColor: '#2a2a3d',
+          borderWidth: 1,
+          titleColor: '#c8f04e',
+          bodyColor: '#e8e8f0',
+          titleFont: { family: 'DM Mono', size: 11 },
+          bodyFont: { family: 'DM Mono', size: 11 },
+          callbacks: {
+            label: ctx => `Volatility: ${ctx.parsed.x.toFixed(2)}%  Return: ${ctx.parsed.y.toFixed(2)}%`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Expected Volatility (%)', color: '#6b6b8a', font: { family: 'DM Mono', size: 11 } },
+          grid: { color: 'rgba(42,42,61,0.8)' },
+          ticks: { color: '#6b6b8a', font: { family: 'DM Mono', size: 11 } }
+        },
+        y: {
+          title: { display: true, text: 'Expected Return (%)', color: '#6b6b8a', font: { family: 'DM Mono', size: 11 } },
+          grid: { color: 'rgba(42,42,61,0.8)' },
+          ticks: { color: '#6b6b8a', font: { family: 'DM Mono', size: 11 } }
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
