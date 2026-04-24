@@ -7,10 +7,6 @@ import os
 
 app = Flask(__name__, static_folder='static')
 
-# ──────────────────────────────────────────────
-#  Core strategy functions
-# ──────────────────────────────────────────────
-
 def equal_weight(n):
     return [1 / n] * n
 
@@ -60,9 +56,7 @@ def portfolio_std(weights, cov):
     return float(np.sqrt(np.dot(weights, np.dot(cov, weights)) * 250))
 
 
-# ──────────────────────────────────────────────
 #  Routes
-# ──────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -176,6 +170,10 @@ def optimize():
         return jsonify({'error': str(e)}), 500
 
 
+# if __name__ == '__main__':
+#     os.makedirs('static', exist_ok=True)
+#     app.run(debug=True, port=5000)
+
 if __name__ == '__main__':
     os.makedirs('static', exist_ok=True)
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=10000)
